@@ -6,10 +6,33 @@ class ASDate < Sequel::Model(:date)
 
   set_model_scope :global
 
+  # Sequel FKey fields that should just be copied from initial date if present
+  @@association_fields = %w|accession_id
+                            deaccession_id
+                            archival_object_id
+                            resource_id
+                            event_id
+                            digital_object_id
+                            digital_object_component_id
+                            related_agents_rlshp_id
+                            agent_person_id
+                            agent_family_id
+                            agent_corporate_entity_id
+                            agent_software_id
+                            name_person_id
+                            name_family_id
+                            name_corporate_entity_id
+                            name_software_id
+                            date_type_id
+                            label_id|
+
+
   def populate(asdate, ttdate)
     asdate.json_schema_version = json_schema_version
-    asdate.resource_id = resource_id
-    asdate.label = label
+
+    @@association_fields.each do |field|
+      asdate.send(field + '=', send(field)) if send(field)
+    end
 
     asdate.expression = ttdate[:original_string]
     asdate.begin = ttdate[:date_start] if ttdate[:date_start]
@@ -18,8 +41,8 @@ class ASDate < Sequel::Model(:date)
     asdate.date_type = ttdate[:inclusive_range] ? 'inclusive' : 'single'
 
     # default to ce/gregorian because why not
-    asdate.calendar = 'gregorian' unless ttdate[:calendar]
-    asdate.era = 'ce' unless ttdate[:era]
+    asdate.calendar = 'gregorian' unless ttdate[:calendar] || calendar
+    asdate.era = 'ce' unless ttdate[:era] || era
 
     return asdate
   end
