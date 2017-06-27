@@ -27,18 +27,20 @@ class ASDate < Sequel::Model(:date)
                             label_id|
 
 
-  def populate(asdate, ttdate)
-    asdate.json_schema_version = json_schema_version
+  def populate(asdate, ttdate, dtype)
+    asdate.json_schema_version = self.json_schema_version
 
     @@association_fields.each do |field|
-      asdate.send(field + '=', send(field)) if send(field)
+      asdate.send(field + '=', self.send(field)) if self.send(field)
     end
 
     asdate.expression = ttdate[:original_string]
     asdate.begin = ttdate[:date_start] if ttdate[:date_start]
     asdate.end = ttdate[:date_end] if ttdate[:date_end]
     asdate.certainty = ttdate[:certainty] if ttdate[:certainty]
-    asdate.date_type = ttdate[:inclusive_range] ? 'inclusive' : 'single'
+    if dtype != 'bulk'
+      asdate.date_type = ttdate[:inclusive_range] ? 'inclusive' : 'single'
+    end
 
     # default to ce/gregorian because why not
     asdate.calendar = 'gregorian' unless ttdate[:calendar] || calendar
@@ -54,12 +56,16 @@ class ASDate < Sequel::Model(:date)
   		# parse date
     	parsed_dates = Timetwister.parse(self.expression)
 
+      # store pre-parse date_type
+      # otherwise, any range will annihilate bulk type
+      dtype = self.date_type
+
     	# store the parsed values for first date if we were able to parse
-      populate(self, parsed_dates.first)
+      populate(self, parsed_dates.first, dtype)
 
       parsed_dates.drop(1).each do |ttdate|
         date = ASDate.new
-        populate(date, ttdate)
+        populate(date, ttdate, dtype)
         date.save
       end
     end
