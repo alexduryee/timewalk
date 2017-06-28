@@ -34,7 +34,7 @@ class ASDate < Sequel::Model(:date)
       asdate.send(field + '=', self.send(field)) if self.send(field)
     end
 
-    asdate.expression = ttdate[:original_string]
+    asdate.expression = ttdate[:original_string].strip
     asdate.begin = ttdate[:date_start] if ttdate[:date_start]
     asdate.end = ttdate[:date_end] if ttdate[:date_end]
     asdate.certainty = ttdate[:certainty] if ttdate[:certainty]
@@ -49,7 +49,7 @@ class ASDate < Sequel::Model(:date)
     return asdate
   end
 
-  def before_save
+  def around_save
  	  # if there are no normalized values, draw seven
 	  if (!self.begin && !self.end) && self.expression
 
@@ -63,13 +63,15 @@ class ASDate < Sequel::Model(:date)
     	# store the parsed values for first date if we were able to parse
       populate(self, parsed_dates.first, dtype)
 
+      super
+
       parsed_dates.drop(1).each do |ttdate|
         date = ASDate.new
         populate(date, ttdate, dtype)
         date.save
       end
+    else
+      super
     end
-
-    super
   end
 end
