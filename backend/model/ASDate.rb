@@ -6,25 +6,72 @@ class ASDate < Sequel::Model(:date)
 
   set_model_scope :global
 
-  def before_save
+  # Sequel FKey fields that should just be copied from initial date if present
+  @@association_fields = %w|accession_id
+                            deaccession_id
+                            archival_object_id
+                            resource_id
+                            event_id
+                            digital_object_id
+                            digital_object_component_id
+                            related_agents_rlshp_id
+                            agent_person_id
+                            agent_family_id
+                            agent_corporate_entity_id
+                            agent_software_id
+                            name_person_id
+                            name_family_id
+                            name_corporate_entity_id
+                            name_software_id
+                            date_type_id
+                            label_id|
 
- 	# if there are no normalized values, draw seven
-	if (!self.begin && !self.end) && self.expression
 
-  		# parse date
-    	parsed_date = Timetwister.parse(self.expression)
+  def populate(asdate, ttdate, dtype)
+    asdate.json_schema_version = self.json_schema_version
 
-    	# store the parsed values if we were able to parse
-      self.begin = parsed_date[0][:date_start] if parsed_date[0][:date_start]
-    	self.end = parsed_date[0][:date_end] if parsed_date[0][:date_end]
-      self.certainty = parsed_date[0][:certainty] if parsed_date[0][:certainty]
-
-      # default to ce/gregorian because why not
-      self.calendar = 'gregorian'
-      self.era = 'ce'
-
+    @@association_fields.each do |field|
+      asdate.send(field + '=', self.send(field)) if self.send(field)
     end
 
-    super
+    asdate.expression = ttdate[:original_string].strip
+    asdate.begin = ttdate[:date_start] if ttdate[:date_start]
+    asdate.end = ttdate[:date_end] if ttdate[:date_end]
+    asdate.certainty = ttdate[:certainty] if ttdate[:certainty]
+    if dtype != 'bulk'
+      asdate.date_type = ttdate[:inclusive_range] ? 'inclusive' : 'single'
+    end
+
+    # default to ce/gregorian because why not
+    asdate.calendar = 'gregorian' unless ttdate[:calendar] || calendar
+    asdate.era = 'ce' unless ttdate[:era] || era
+
+    return asdate
+  end
+
+  def around_save
+ 	  # if there are no normalized values, draw seven
+	  if (!self.begin && !self.end) && self.expression
+
+  		# parse date
+    	parsed_dates = Timetwister.parse(self.expression)
+
+      # store pre-parse date_type
+      # otherwise, any range will annihilate bulk type
+      dtype = self.date_type
+
+    	# store the parsed values for first date if we were able to parse
+      populate(self, parsed_dates.first, dtype)
+
+      super
+
+      parsed_dates.drop(1).each do |ttdate|
+        date = ASDate.new
+        populate(date, ttdate, dtype)
+        date.save
+      end
+    else
+      super
+    end
   end
 end
