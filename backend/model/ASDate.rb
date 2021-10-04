@@ -14,15 +14,6 @@ class ASDate < Sequel::Model(:date)
                             event_id
                             digital_object_id
                             digital_object_component_id
-                            related_agents_rlshp_id
-                            agent_person_id
-                            agent_family_id
-                            agent_corporate_entity_id
-                            agent_software_id
-                            name_person_id
-                            name_family_id
-                            name_corporate_entity_id
-                            name_software_id
                             date_type_id
                             label_id|
 
