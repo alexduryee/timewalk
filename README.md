@@ -4,6 +4,10 @@ An automated date parser for ArchivesSpace.
 
 timewalk will automatically parse any values in ArchivesSpace's Date Expresssion field into ISO8601-compliant `Begin` and `End` values.  In addition, it will parse out date certainties and set the calendar/era values automatically.
 
+## Version Compatibility
+
+The latest version of timewalk is compatible with ArchivesSpace 3.0 and above, and *is not* compatible with ArchivesSpace 2.x.  A version compatible with ArchivesSpace 2.x is available [here](https://github.com/alexduryee/timewalk/releases/tag/v2.x)
+
 ## Expectations on Data Entry
 
 timewalk will parse any single date, or date span, properly.  The following dates will parse correctly:
