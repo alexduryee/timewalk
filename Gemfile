@@ -1,5 +1,5 @@
 ASpaceGems.setup if defined? ASpaceGems
 
-source 'http://rubygems.org'
+source 'https://rubygems.org'
 
-gem 'timetwister', '0.2.7'
+gem 'timetwister'
