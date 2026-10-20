@@ -1,6 +1,0 @@
-#!/usr/bin/env ruby
-
-require 'timetwister'
-require 'json'
-
-puts Timetwister.parse(ARGV[0]).to_json

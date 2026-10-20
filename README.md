@@ -30,7 +30,12 @@ These dates should be broken into distinct Date entries in ArchivesSpace regardl
 
 ## Installation
 
-Create a `plugins/timewalk` directory in your ArchivesSpace directory, copy the repository into that directory, and add `timewalk` to your `AppConfig[:plugins]` list.
+1. Create a `plugins/timewalk` directory in your ArchivesSpace directory, copy the repository into that directory
+2. In the base archivesspace directory, run `./scripts/initialize-plugin.sh timewalk`.
+3. Add `timewalk` to your `AppConfig[:plugins]` list.
+4. Restart archivesspace
+
+When running ArchivesSpace with the [Docker configuration package](https://docs.archivesspace.org/administration/docker/), copy the plugin into its `plugins` directory and, instead of step 2, add `ASPACE_INITIALIZE_PLUGINS=timewalk` to its `.env` file (comma-separate multiple plugins). The container then runs `initialize-plugin.sh` for the plugin on startup, which installs the `timetwister` gem. Recreate the app container afterwards with `docker compose up -d --force-recreate app`.
 
 ## Credits
 
